@@ -1,8 +1,8 @@
 
 __install_prereqs(){
     echo '============== Virtual Environment Creation =============='
-    source venv/bin/activate
     python3 -m venv venv
+    source venv/bin/activate
     
 
     echo '============== Upgrading pip3 =============='
@@ -13,27 +13,33 @@ __install_prereqs(){
 }
 
 
+__create_venv(){
+    if [ ! -d "venv" ] 
+    then
+        echo "venv not present. Creating" 
+        __install_prereqs
+        chmod -R 775 venv
+    fi
+
+    source "./venv/bin/activate"
+
+}
 
 
-__call_impl-scanner(){
+
+
+__call_impl_scanner(){
     python3 impl-scanner.py 
 }
 
 
-__start_impl-scanner(){
-    
-    source venv/bin/activate    
-    __call_impl-scanner
 
-}
 
 
 
 __main__(){ 
-if [ ! -d "venv" ]; then
-  __install_prereqs
-fi
-    __start_impl-scanner
+    __create_venv
+    __call_impl_scanner
 }
 
 
