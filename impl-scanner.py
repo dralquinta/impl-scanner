@@ -64,4 +64,4 @@ def poll_recommendations(project_id):
 if __name__ == "__main__":
     project_id = "maps-dryrun" 
     list_vpcs_and_connections(project_id)
-    poll_recommendations(project_id)
+   #poll_recommendations(project_id)
