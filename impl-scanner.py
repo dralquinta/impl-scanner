@@ -1,7 +1,10 @@
 from google.cloud import compute_v1
 from google.cloud import recommender_v1
 import time
-from diagrams import Diagram, Cluster, Edge
+import networkx as nx
+import matplotlib.pyplot as plt
+from diagrams.gcp.compute import VPCNetwork
+from diagrams.gcp.network import LoadBalancing
 
 def list_vpcs_and_connections(project_id):
     """
@@ -14,7 +17,7 @@ def list_vpcs_and_connections(project_id):
 
     response = client.list(request=request)
 
-    vpc_data = {}  # Dictionary to store VPC and peering data
+    vpc_data = {} 
 
     for network in response:
         vpc_name = network.name
@@ -27,23 +30,53 @@ def list_vpcs_and_connections(project_id):
 
     return vpc_data
 
-def generate_vpc_diagram(vpc_data):
+def poll_recommendations(project_id):
     """
-    Generates a VPC network diagram using the 'diagrams' library.
+    Polls for active recommendations related to VPCs in the specified project.
     """
 
-    with Diagram("GCP VPC Network", show=False):  # Diagram context
+    client = recommender_v1.RecommenderClient()
+    parent = f"projects/{project_id}/locations/global/recommenders/google.compute.network.Network"
+    request = recommender_v1.ListRecommendationsRequest(
+        parent=parent,
+        filter="state_info.state=ACTIVE", 
+    )
+
+    while True: 
+        response = client.list_recommendations(request=request)
+
+        for recommendation in response:
+            print(f"Recommendation Name: {recommendation.name}")
+            print(f"Description: {recommendation.description}")
+            # ... (Extract and print other relevant details as needed) ...
+            print("---")
+
+        if not response.recommendations:
+            print("No active recommendations found.")
+
+        time.sleep(60) 
+
+def generate_vpc_diagram(vpc_data, output_filename="vpc_network_diagram.png"):
+    """
+    Generates a VPC network diagram using diagrams with GCP icons.
+    """
+
+    with Diagram("GCP VPC Network", filename=output_filename, show=False):
+        vpc_nodes = {} 
+
+        for vpc_name in vpc_data.keys():
+            vpc_nodes[vpc_name] = VPCNetwork(vpc_name)
+
         for vpc_name, vpc_info in vpc_data.items():
-            with Cluster(vpc_name):  # VPC cluster
-                for subnet in vpc_info['subnets']:
-                    # Subnet representation (customize as needed)
-                    subnet_node = f"{subnet} (subnet)" 
-
             for peering_name, peering_network in vpc_info['peerings']:
-                # Peering connection (adjust styling as desired)
-                Edge(vpc_name, peering_network, label=peering_name)
+                Edge(vpc_nodes[vpc_name], vpc_nodes[peering_network], label=peering_name)
+
+    print(f"Diagram saved to {output_filename}")
 
 if __name__ == "__main__":
-    project_id = "maps-dryrun"
+    project_id = "dryruns" 
+    output_filename = "vpc_network_diagram.png" 
+
     vpc_data = list_vpcs_and_connections(project_id)
-    generate_vpc_diagram(vpc_data)
+    generate_vpc_diagram(vpc_data, output_filename)
+   # poll_recommendations(project_id)

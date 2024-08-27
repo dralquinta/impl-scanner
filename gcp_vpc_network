@@ -1,0 +1,11 @@
+digraph "GCP VPC Network" {
+	graph [fontcolor="#2D3436" fontname="Sans-Serif" fontsize=15 label="GCP VPC Network" nodesep=0.60 pad=2.0 rankdir=LR ranksep=0.75 splines=ortho]
+	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
+	edge [color="#7B8894"]
+	subgraph "cluster_my-custom-vpc" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="my-custom-vpc" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+	}
+	subgraph "cluster_my-testing-default-vpc" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="my-testing-default-vpc" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+	}
+}
