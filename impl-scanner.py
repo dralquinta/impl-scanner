@@ -1,4 +1,6 @@
 from google.cloud import compute_v1
+from google.cloud import recommender_v1
+import time
 
 def list_vpcs_and_connections(project_id):
     """
@@ -15,7 +17,12 @@ def list_vpcs_and_connections(project_id):
         print(f"VPC Name: {network.name}")
         print(f"VPC ID: {network.id}")
         print(f"VPC Description: {network.description}")
-        print(f"VPC Subnets: {[subnet.name for subnet in network.subnetworks]}")
+
+        # Enhanced Subnet Handling
+        if isinstance(network.subnetworks, list): 
+            print(f"VPC Subnets: {[subnet.name for subnet in network.subnetworks]}")
+        else:
+            print(f"VPC Subnets: {network.subnetworks}") 
 
         if network.peerings:
             print("Peering Connections:")
@@ -28,6 +35,33 @@ def list_vpcs_and_connections(project_id):
 
         print("---")
 
+def poll_recommendations(project_id):
+    """
+    Polls for active recommendations related to VPCs in the specified project.
+    """
+
+    client = recommender_v1.RecommenderClient()
+    parent = f"projects/{project_id}/locations/global/recommenders/google.compute.network.Network"
+    request = recommender_v1.ListRecommendationsRequest(
+        parent=parent,
+        filter="state_info.state=ACTIVE", 
+    )
+
+    while True: 
+        response = client.list_recommendations(request=request)
+
+        for recommendation in response:
+            print(f"Recommendation Name: {recommendation.name}")
+            print(f"Description: {recommendation.description}")
+            # ... (Extract and print other relevant details as needed) ...
+            print("---")
+
+        if not response.recommendations:
+            print("No active recommendations found.")
+
+        time.sleep(60) 
+
 if __name__ == "__main__":
-    project_id = "maps-dryrun"  # Replace with your actual project ID
+    project_id = "maps-dryrun" 
     list_vpcs_and_connections(project_id)
+    poll_recommendations(project_id)
