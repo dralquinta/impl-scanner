@@ -28,9 +28,9 @@ __start_impl-scanner(){
 
 
 __main__(){ 
-    if [ ! -d ".venv" ] then
-        __install_prereqs
-    fi
+if [ ! -d ".venv" ]; then
+  __install_prereqs
+fi
     __start_impl-scanner
 }
 
