@@ -1,8 +1,9 @@
 
 __install_prereqs(){
     echo '============== Virtual Environment Creation =============='
-    python3 -m venv venv
     source venv/bin/activate
+    python3 -m venv venv
+    
 
     echo '============== Upgrading pip3 =============='
     pip3 install --upgrade pip
@@ -20,7 +21,8 @@ __call_impl-scanner(){
 
 
 __start_impl-scanner(){
-
+    
+    source venv/bin/activate    
     __call_impl-scanner
 
 }
