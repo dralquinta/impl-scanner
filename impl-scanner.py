@@ -1,10 +1,11 @@
 from google.cloud import compute_v1
 from google.cloud import recommender_v1
 import time
+from diagrams import Diagram, Cluster, Edge
 
 def list_vpcs_and_connections(project_id):
     """
-    Lists VPCs in the specified project and identifies peering connections.
+    Lists VPCs in the specified project, identifies peering connections, and returns data for diagramming.
     """
 
     client = compute_v1.NetworksClient()
@@ -13,55 +14,36 @@ def list_vpcs_and_connections(project_id):
 
     response = client.list(request=request)
 
+    vpc_data = {}  # Dictionary to store VPC and peering data
+
     for network in response:
-        print(f"VPC Name: {network.name}")
-        print(f"VPC ID: {network.id}")
-        print(f"VPC Description: {network.description}")
+        vpc_name = network.name
+        vpc_data[vpc_name] = {
+            'subnets': [subnet.name for subnet in network.subnetworks] if isinstance(network.subnetworks, list) else network.subnetworks,
+            'peerings': [(peering.name, peering.network) for peering in network.peerings]
+        }
 
-        # Enhanced Subnet Handling
-        if isinstance(network.subnetworks, list): 
-            print(f"VPC Subnets: {[subnet.name for subnet in network.subnetworks]}")
-        else:
-            print(f"VPC Subnets: {network.subnetworks}") 
+        # ... (Existing print statements for console output can remain if desired) ...
 
-        if network.peerings:
-            print("Peering Connections:")
-            for peering in network.peerings:
-                print(f"  - Peering Name: {peering.name}")
-                print(f"  - Peering Network: {peering.network}")
-                print(f"  - Peering State: {peering.state}")
-        else:
-            print("No Peering Connections")
+    return vpc_data
 
-        print("---")
-
-def poll_recommendations(project_id):
+def generate_vpc_diagram(vpc_data):
     """
-    Polls for active recommendations related to VPCs in the specified project.
+    Generates a VPC network diagram using the 'diagrams' library.
     """
 
-    client = recommender_v1.RecommenderClient()
-    parent = f"projects/{project_id}/locations/global/recommenders/google.compute.network.Network"
-    request = recommender_v1.ListRecommendationsRequest(
-        parent=parent,
-        filter="state_info.state=ACTIVE", 
-    )
+    with Diagram("GCP VPC Network", show=False):  # Diagram context
+        for vpc_name, vpc_info in vpc_data.items():
+            with Cluster(vpc_name):  # VPC cluster
+                for subnet in vpc_info['subnets']:
+                    # Subnet representation (customize as needed)
+                    subnet_node = f"{subnet} (subnet)" 
 
-    while True: 
-        response = client.list_recommendations(request=request)
-
-        for recommendation in response:
-            print(f"Recommendation Name: {recommendation.name}")
-            print(f"Description: {recommendation.description}")
-            # ... (Extract and print other relevant details as needed) ...
-            print("---")
-
-        if not response.recommendations:
-            print("No active recommendations found.")
-
-        time.sleep(60) 
+            for peering_name, peering_network in vpc_info['peerings']:
+                # Peering connection (adjust styling as desired)
+                Edge(vpc_name, peering_network, label=peering_name)
 
 if __name__ == "__main__":
-    project_id = "maps-dryrun" 
-    list_vpcs_and_connections(project_id)
-   #poll_recommendations(project_id)
+    project_id = "maps-dryrun"
+    vpc_data = list_vpcs_and_connections(project_id)
+    generate_vpc_diagram(vpc_data)
