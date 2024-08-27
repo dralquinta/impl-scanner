@@ -29,5 +29,5 @@ def list_vpcs_and_connections(project_id):
         print("---")
 
 if __name__ == "__main__":
-    project_id = "YOUR_GCP_PROJECT_ID"  # Replace with your actual project ID
+    project_id = "maps-dryrun"  # Replace with your actual project ID
     list_vpcs_and_connections(project_id)
